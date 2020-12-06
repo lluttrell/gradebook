@@ -43,14 +43,14 @@ int check_valid_grade(int argc, char *argv[])
 
   regex_t recourse, regrade;
   regcomp(&recourse, "^[A-Z]{4}[0-9]{3}$", REG_EXTENDED);
-  if (regexec(&recourse, argv[1], 0, NULL, 0) == REG_NOMATCH)
+  if (regexec(&recourse, argv[0], 0, NULL, 0) == REG_NOMATCH)
   {
     printf("Invalid coursecode: Must match the regex ^[A-Z]{4}[0-9]{3}$ eg: CPSC525\n");
     return -1;
   }
 
   regcomp(&regrade, "^([A-D][\\+\\-]?|F)$", REG_EXTENDED);
-  if (regexec(&regrade, argv[2], 0, NULL, 0) == REG_NOMATCH)
+  if (regexec(&regrade, argv[1], 0, NULL, 0) == REG_NOMATCH)
   {
     printf("Invalid coursecode: Must match the regex ^([A-D][\\+\\-]?|F)$ eg: B+\n");
     return -1;
@@ -77,7 +77,7 @@ int write_grade(int argc, char *argv[], char *uname)
   if (ac == 0)
   {
     FILE *fp = fopen(fname, "a");
-    fprintf(fp, "%s %s %s\n", puname, argv[1], argv[2]);
+    fprintf(fp, "%s %s %s\n", puname, argv[0], argv[1]);
     fclose(fp);
     printf("Submitted Grade!\n");
   }
@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
     case 0b10001:
     case 0b10010:
     case 0b10011:
-      success = read_grades(uname, ofilename, usrflag);
+      success = read_grades(uname, ofilename, fileoutputflag);
       break;
     case 0b01010:
       success = write_grade(argc, argv, uname);
