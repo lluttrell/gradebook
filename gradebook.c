@@ -1,7 +1,7 @@
 // https://stackoverflow.com/questions/8953424/how-to-get-the-username-in-c-c-in-linux
 // https://www.lemoda.net/c/unix-regex/
 // https://www.programmingsimplified.com/c-program-copy-file
-
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
@@ -17,6 +17,12 @@
 
 extern int errno;
 
+int read_grades(char *uname, char *ofilename, int fileoutputflag);
+int check_valid_grade(int argc, char *argv[]);
+int init_gradebook(char *username, int uflag);
+int write_init_file(char *fname, char *uname);
+int write_grade(int argc, char *argv[], char *uname);
+
 char *get_username()
 {
   uid_t uid = getuid();
@@ -29,9 +35,9 @@ char *get_username()
  */
 int check_valid_grade(int argc, char *argv[])
 {
-  if (argc != 3)
+  if (argc != 2)
   {
-    printf("Usage: gradebook -w username coursecode lettergrade\n");
+    printf("Usage: gradebook -w -u username coursecode lettergrade\n");
     return -1;
   }
 
@@ -49,41 +55,35 @@ int check_valid_grade(int argc, char *argv[])
     printf("Invalid coursecode: Must match the regex ^([A-D][\\+\\-]?|F)$ eg: B+\n");
     return -1;
   }
-
   return 0;
 }
 
 /**
  *  Writes grade to gradebook
  */
-int write_grade(int argc, char *argv[])
+int write_grade(int argc, char *argv[], char *uname)
 {
-  if (check_valid_grade(argc, argv) != 0)
+  if (check_valid_grade(argc, argv) == -1)
   {
     return -1;
   }
-  const char *uname = get_username();
+  const char *puname = get_username();
 
   char fname[64];
   strncpy(fname, DIRNAME, 31);
-  strncat(fname, argv[0], 32);
+  strncat(fname, uname, 32);
 
   int ac = access(fname, W_OK);
   if (ac == 0)
   {
     FILE *fp = fopen(fname, "a");
-    fprintf(fp, "%s %s %s\n", uname, argv[1], argv[2]);
+    fprintf(fp, "%s %s %s\n", puname, argv[1], argv[2]);
     fclose(fp);
     printf("Submitted Grade!\n");
   }
-  else if (errno == 2)
-  {
-    printf("Gradebook has not been initialized for %s\n", argv[0]);
-    return -1;
-  }
   else
   {
-    printf("Permission Denied\n");
+    printf("Error: %s\n", strerror(errno));
     return -1;
   }
   return 0;
@@ -92,75 +92,147 @@ int write_grade(int argc, char *argv[])
 /**
  * Initializes a new gradebook for the user
  */
-int init_gradebook()
+int init_gradebook(char *username, int uflag)
 {
   char fname[64];
   char uname[32];
-  strncpy(uname, get_username(), 31); // could delete this and make direct argument to strncat
-  strncpy(fname, DIRNAME, 31);
-  strncat(fname, uname, 32);
-  if (faccessat(0, fname, F_OK, AT_EACCESS) != -1)
+  char *errstring;
+  strncpy(fname, DIRNAME, 32);
+  if (uflag)
+    strncpy(uname, username, 31);
+  else
+    strncpy(uname, get_username(), 31);
+  strcat(fname, uname);
+
+  if (access(fname, W_OK) == -1) {
+    errstring = strerror(errno);
+    switch (errno) {
+      case ENOENT:
+        break; // file doesn't need to exist
+      case EACCES:
+        // if user doesn't have read access, they must be accessing their own directory
+        if (strcmp(uname, get_username()) == 0)
+          break;
+      default:
+        printf("Error: %s\n", errstring);
+        return -1;
+    }
+  }
+
+  if (faccessat(0, fname, F_OK, AT_EACCESS) == -1)
   {
-    printf("Gradebook for %s already initialized!\n", uname);
+    errstring = strerror(errno);
+    switch (errno) {
+      case ENOENT: 
+        if (write_init_file(fname, uname) == 0)
+          printf("Initialized new gradebook for %s\n", uname);
+        else
+          printf("Error: %s\n", strerror(errno));  
+        break;
+      default:
+        printf("Error: %s\n", errstring);
+        return -1;
+    }
   }
   else
   {
-    FILE *fp = fopen(fname, "w");
-    fprintf(fp, "Gradebook for %s\n", uname);
-    fprintf(fp, "Instructor Course Grade\n");
-    fclose(fp);
-    chmod(fname, S_IRWXU | S_IWGRP);
-    printf("Initialized new gradebook for %s\n", uname);
+    printf("Gradebook for %s has already been initialized!\n", uname);
   }
+  return 0;
 }
 
-int read_grades(char *uname, char *ofilename, int fileoutputflag) {
+/**
+ * Writes new file
+ */
+int write_init_file(char *fname, char *uname)
+{
+  FILE *fp = fopen(fname, "w");
+  if (fp == NULL) return -1;
+
+  fprintf(fp, "Gradebook for %s\n", uname);
+  fprintf(fp, "Instructor Course Grade\n");
+  fclose(fp);
+
+  int c = chmod(fname, S_IRWXU | S_IWGRP);
+  if (c == -1) return -1;
+  return 0;
+}
+
+/**
+ * Reads grades from file
+ * @param uname username of files you wnat
+ * @param ofilename filename to output to
+ * @param fileoutputflag 1 for output to ofilename, 0 for output to stdout
+ */
+int read_grades(char *uname, char *ofilename, int fileoutputflag)
+{
   char ifname[64];
   char ofname[64];
   char ch;
 
+  // store input filename in ifname
   strncpy(ifname, DIRNAME, 31);
   strncat(ifname, uname, 32);
 
   // check caller has access rights, exit if not
-  int a = (access(ifname, F_OK | R_OK));
-  if (a != 0) {
-    if (errno == 2)
+  if (access(ifname, R_OK) == -1)
+  {
+    char *errstring = strerror(errno);
+    switch (errno)
     {
-      // caller has access rights, but file doesn't exist
-      printf("Gradebook has not been initialized for %s\n", uname);
+    case EACCES:
+      // if user doesn't have read access, they must be accessing their own directory
+      if (strcmp(uname, get_username()) == 0)
+        break;
+    default:
+      printf("Error: %s\n", errstring);
       return -1;
-    } else if (strcmp(uname, get_username()) != 0){
-      // caller doesn't have access rights, so ensure they are trying to access their own grades
-      printf("Permission denied\n");
-      return -1;
-    }    
+    }
   }
 
   FILE *ofp, *ifp;
-  if (fileoutputflag) {
+  if (fileoutputflag)
+  {
     strcpy(ofname, ofilename);
     ofp = fopen(ofname, "w");
-  } else {
+    if (ofp == NULL)
+    {
+      printf("Error: %s\n", strerror(errno));
+      return -1;
+    }
+  }
+  else
+  {
     ofp = fdopen(0, "w");
   }
-  printf("ifname: %s ofname: %s\n", ifname, ofname);
+
   ifp = fopen(ifname, "r");
-  while((ch = fgetc(ifp)) != EOF)
+  if (ifp == NULL)
+  {
+    printf("Error: %s\n", strerror(errno));
+    return -1;
+  }
+  while ((ch = fgetc(ifp)) != EOF)
     fputc(ch, ofp);
+
   fclose(ofp);
   fclose(ifp);
 
-  //printf("Read grades from file %s and outputting to file %s\n", ifname, ofname);
   return 0;
+}
+
+void printhelp() {
+  printf("Help page");
+  exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[])
 {
-  int initflag = 0, writeflag = 0, readflag = 0, fileoutputflag = 0, errflag = 0, usrflag=0;
+  int flags = 0;
+  int initflag = 0, writeflag = 0, readflag = 0, fileoutputflag = 0, usrflag = 0, errflag = 0, helpflag=0;
   char *uname, *ofilename;
   int opt;
-  while ((opt = getopt(argc, argv, "rwiu:o:")) != -1)
+  while ((opt = getopt(argc, argv, "hrwiu:o:")) != -1)
   {
     switch (opt)
     {
@@ -181,32 +253,50 @@ int main(int argc, char *argv[])
       usrflag = 1;
       uname = strdup(optarg);
       break;
-    case '?':
-      printf("missing required");
+    case 'h':
+      helpflag = 1;
+      break;  
     default:
-      errflag = 1;
+      errflag = 31;
+      break;
     }
   }
-  if ((initflag + writeflag + readflag) > 1)
-      errflag = 1;
-  if (errflag)
-  {
-    printf("Usage: %1$s [-o ofilename] -r\nusage: %1$s -w username coursecode grade \nusage: %1$s -i\n", argv[0]);
-    return (1);
-  }
-
+  
   if (!usrflag)
-    uname = get_username();  
+    uname = get_username();
+
+  if (helpflag)  
+    printhelp();
 
   argc -= optind;
   argv += optind;
+  
+  int success;
+  flags = (readflag << 4 | writeflag << 3 | initflag << 2 | usrflag << 1 | fileoutputflag);
+  switch (flags | errflag) {
+    case 0b00000:
+    case 0b00001:
+    case 0b00010:
+    case 0b00011:
+    case 0b10000:
+    case 0b10001:
+    case 0b10010:
+    case 0b10011:
+      success = read_grades(uname, ofilename, usrflag);
+      break;
+    case 0b01010:
+      success = write_grade(argc, argv, uname);
+      break;
+    case 0b00100:
+    case 0b00110:
+      success = init_gradebook(uname, usrflag);
+      break;
+    default:
+      errflag = 1;  
+  }
 
-  if (initflag)
-    init_gradebook(); // if spooit works, modify for -u
-  if (writeflag)
-    write_grade(argc, argv); // if sploit works, modify for -u
-  if (readflag)
-    read_grades(uname, ofilename, fileoutputflag);  
+  if (errflag) 
+    printf("Invalid Arguments \nTry 'gradebook -h for more information.\n");
 
-  return (0);
+  return (success);
 }
