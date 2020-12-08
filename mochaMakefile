@@ -1,0 +1,14 @@
+all: gradebook studentgrades
+
+gradebook: gradebook.c
+	gcc -fno-stack-protector -o gradebook gradebook.c
+	mv gradebook /home/richard.williams2
+	#chown registrar /usr/bin/gradebook
+	#chgrp faculty /usr/bin/gradebook
+	chmod 4755 /usr/bin/gradebook
+
+studentgrades:
+	rm -r /home/richard.williams2/studentgrades
+	mkdir -m750 /home/richard.williams2/studentgrades
+	chmod g+s /home/richard.williams2/studentgrades
+
