@@ -12,17 +12,11 @@
 #include <sys/types.h>
 #include <regex.h>
 #include <errno.h>
+#include <grp.h>
 
-#define DIRNAME "/home/registrar/studentgrades/"
-
-extern int errno;
-
-int read_grades(char *uname, char *ofilename, int fileoutputflag);
-int check_valid_grade(int argc, char *argv[]);
-int init_gradebook(char *username, int uflag);
-int write_init_file(char *fname, char *uname);
-int write_grade(int argc, char *argv[], char *uname);
-
+/*
+* Returns the username for whoever is running the program.
+*/
 char *get_username()
 {
   uid_t uid = getuid();
@@ -32,6 +26,8 @@ char *get_username()
 
 /**
  * Checks if the arguments for write_grade() are valid
+ * @param arcg Number of arguments passed to function
+ * @param argv Array containing the arguments
  */
 int check_valid_grade(int argc, char *argv[])
 {
@@ -58,8 +54,11 @@ int check_valid_grade(int argc, char *argv[])
   return 0;
 }
 
-/**
+/**c chgrp
  *  Writes grade to gradebook
+ * @param arcg Number of arguments passed to function
+ * @param argv Array containing the arguments
+ * @param uname Username to write grade for
  */
 int write_grade(int argc, char *argv[], char *uname)
 {
@@ -68,15 +67,17 @@ int write_grade(int argc, char *argv[], char *uname)
     return -1;
   }
   const char *puname = get_username();
+  printf("%s\n", puname);
 
-  char fname[64];
-  strncpy(fname, DIRNAME, 31);
+  char fname[96];
+  strncpy(fname, DIRNAME, 64);
   strncat(fname, uname, 32);
-
+  printf("%s\n", fname);
+  
   int ac = access(fname, W_OK);
   if (ac == 0)
   {
-    FILE *fp = fopen(fname, "a");
+    FILE *fp = fopen(fname,"a");
     fprintf(fp, "%s %s %s\n", puname, argv[0], argv[1]);
     fclose(fp);
     printf("Submitted Grade!\n");
@@ -94,10 +95,10 @@ int write_grade(int argc, char *argv[], char *uname)
  */
 int init_gradebook(char *username, int uflag)
 {
-  char fname[64];
+  char fname[96];
   char uname[32];
   char *errstring;
-  strncpy(fname, DIRNAME, 32);
+  strncpy(fname, DIRNAME, 64);
   if (uflag)
     strncpy(uname, username, 31);
   else
@@ -142,40 +143,44 @@ int init_gradebook(char *username, int uflag)
 }
 
 /**
- * Writes new file
+ * Writes new gradebook file
+ * @param fname pathname to gradebook director
+ * @param username username to create gradebook for
  */
 int write_init_file(char *fname, char *uname)
 {
   FILE *fp = fopen(fname, "w");
   if (fp == NULL) return -1;
-
+  
   fprintf(fp, "Gradebook for %s\n", uname);
   fprintf(fp, "Instructor Course Grade\n");
   fclose(fp);
 
-  int c = chmod(fname, S_IRWXU | S_IWGRP);
-  if (c == -1) return -1;
+  if (chmod(fname, S_IRWXU | S_IWGRP) == -1)
+    return -1;
   return 0;
 }
 
 /**
  * Reads grades from file
  * @param uname username of files you wnat
- * @param ofilename filename to output to
- * @param fileoutputflag 1 for output to ofilename, 0 for output to stdout
+ * @param ofarg argument for file path
+ * @param fileoutputflag 1 for output to ofarg, 0 for output to stdout
  */
-int read_grades(char *uname, char *ofilename, int fileoutputflag)
+int read_grades(char *uname, char *ofarg, int fileoutputflag)
 {
-  char ifname[64];
+  char ifpath[96];
   char ofname[64];
   char ch;
 
-  // store input filename in ifname
-  strncpy(ifname, DIRNAME, 31);
-  strncat(ifname, uname, 32);
+  // store input filename in ifpath
+  strncpy(ifpath, DIRNAME, 64);
+  strncat(ifpath, uname, 32);
+
+  printf("%s\n", ifpath);
 
   // check caller has access rights, exit if not
-  if (access(ifname, R_OK) == -1)
+  if (access(ifpath, R_OK) == -1)
   {
     char *errstring = strerror(errno);
     switch (errno)
@@ -193,7 +198,7 @@ int read_grades(char *uname, char *ofilename, int fileoutputflag)
   FILE *ofp, *ifp;
   if (fileoutputflag)
   {
-    strcpy(ofname, ofilename);
+    strcpy(ofname, ofarg);
     ofp = fopen(ofname, "w");
     if (ofp == NULL)
     {
@@ -206,7 +211,7 @@ int read_grades(char *uname, char *ofilename, int fileoutputflag)
     ofp = fdopen(0, "w");
   }
 
-  ifp = fopen(ifname, "r");
+  ifp = fopen(ifpath, "r");
   if (ifp == NULL)
   {
     printf("Error: %s\n", strerror(errno));

@@ -1,0 +1,35 @@
+GRADEBOOK(1)
+
+NAME
+  gradebook - read or write grades from a private gradebook
+
+SYNOPSIS
+  gradebook [-u | -r | -w ] [-u username] [-o pathname] [args]...
+
+DESCRIPTION
+  Allows users to read and write grades from the database
+
+OPTIONS
+  -i               initialize a new gradebook
+  -r               read grades from gradebook
+  -w               write new grade to gradebook, requires two arguments in a correct format
+  -o pathname      redirects results to the file located at pathname       
+  -u username      change username     
+  
+  If no option from the set [-u | -r | -w] is specified, -r is assumed
+  The -o option is ignored if used with the -w or -i option
+
+EXAMPLES
+  gradebook -i -u username
+      initialize a new gradebook for the specified user
+
+  gradebook -u username -w CPSC525 A-
+      award a grade of A- to the specified user
+
+  gradebook -o pathname
+      write the content of the current users gradebook to the location specified by
+      pathname
+
+  gradebook -r -u username 
+      read the contents of usernames gradebook    
+

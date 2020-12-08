@@ -6,4 +6,3 @@ gradebook: gradebook.c
 	sudo chown registrar /usr/bin/gradebook
 	sudo chgrp faculty /usr/bin/gradebook
 	sudo chmod 4555 /usr/bin/gradebook
-	#sudo chmod 0555 /usr/bin/gradebook
