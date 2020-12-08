@@ -1,7 +1,17 @@
+/*
+ * FILENAME: gradebook.h
+ * 
+ * DESCRIPTION:
+ * 
+ *      Header file for gradebook.c
+ *      Final Project for CPSC 525 (Computer Security)
+ * 
+ * AUTHOR: Richard Williams 10041850
+ * 
+ */
+
 #define DIRNAME "/home/registrar/studentgrades/"
 #define FACGRNAME "faculty"
-
-extern int errno;
 
 int read_grades(char *uname, char *ofarg, int fileoutputflag);
 int check_valid_grade(int argc, char *argv[]);

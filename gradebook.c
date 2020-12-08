@@ -1,6 +1,21 @@
-// https://stackoverflow.com/questions/8953424/how-to-get-the-username-in-c-c-in-linux
-// https://www.lemoda.net/c/unix-regex/
-// https://www.programmingsimplified.com/c-program-copy-file
+/*
+ * FILENAME: gradebook.c
+ * 
+ * DESCRIPTION:
+ * 
+ *      University grade storage and retrieval system
+ *      Final Project for CPSC 525 (Computer Security)
+ * 
+ * AUTHOR: Richard Williams 10041850
+ * 
+ * REFERENCES:
+ * 
+ *      https://stackoverflow.com/questions/8953424/how-to-get-the-username-in-c-c-in-linux
+ *      https://www.lemoda.net/c/unix-regex/
+ *      https://www.programmingsimplified.com/c-program-copy-file
+ *
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -13,6 +28,9 @@
 #include <regex.h>
 #include <errno.h>
 #include <grp.h>
+#include "gradebook.h"
+
+extern int errno;
 
 /*
 * Returns the username for whoever is running the program.
@@ -54,7 +72,7 @@ int check_valid_grade(int argc, char *argv[])
   return 0;
 }
 
-/**c chgrp
+/**
  *  Writes grade to gradebook
  * @param arcg Number of arguments passed to function
  * @param argv Array containing the arguments
