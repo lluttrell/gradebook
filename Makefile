@@ -14,4 +14,4 @@ studentgrades:
 	sudo mkdir -m750 /home/registrar/studentgrades
 	sudo chmod g+s /home/registrar/studentgrades
 	sudo chown registrar /home/registrar/studentgrades
-	sudo chgrp registrar /home/registrar/studentgrades
+	sudo chgrp faculty /home/registrar/studentgrades

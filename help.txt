@@ -4,7 +4,7 @@ NAME
   gradebook - read or write grades from a private gradebook
 
 SYNOPSIS
-  gradebook [-u | -r | -w ] [-u username] [-o pathname] [args]...
+  gradebook [-i | -r | -w ] [-u username] [-o pathname] [args]...
 
 DESCRIPTION
   Allows users to read and write grades from the database

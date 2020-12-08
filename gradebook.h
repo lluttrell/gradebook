@@ -11,7 +11,7 @@
  */
 
 #define DIRNAME "/home/registrar/studentgrades/"
-#define FACGRNAME "faculty"
+#define HELPCALL "cat /home/registrar/help.txt"
 
 int read_grades(char *uname, int arcg, char *argv[], int fileoutputflag);
 int check_valid_grade(int argc, char *argv[]);

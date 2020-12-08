@@ -32,14 +32,35 @@
 
 extern int errno;
 
+static uid_t euid, ruid;
+
 /*
 * Returns the username for whoever is running the program.
 */
 char *get_username()
 {
-  uid_t uid = getuid();
-  struct passwd *pw = getpwuid(uid);
+  // uid_t uid = getuid();
+  struct passwd *pw = getpwuid(ruid);
   return pw->pw_name;
+}
+
+int drop_privileges()
+{
+  if (seteuid(ruid) == -1)
+  {
+    printf("Error: %s\n", strerror(errno));
+    return -1;
+  }
+  return 0;
+}
+
+int regain_privileges() {
+  if (seteuid(euid) == -1)
+  {
+    printf("Error: %s\n", strerror(errno));
+    return -1;
+  }
+  return 0;
 }
 
 /**
@@ -174,7 +195,7 @@ int write_init_file(char *fname, char *uname)
   if (fp == NULL)
     return -1;
 
-  fprintf(fp, "Gradebook for %s\n", uname);
+  fprintf(fp, "Gradebook for %s\n\n", uname);
   fprintf(fp, "Instructor Course Grade\n");
   fclose(fp);
 
@@ -199,8 +220,6 @@ int read_grades(char *uname, int argc, char *argv[], int fileoutputflag)
   strncpy(ifpath, DIRNAME, 64);
   strncat(ifpath, uname, 32);
 
-  printf("%s\n", ifpath);
-
   // check caller has access rights, exit if not
   if (access(ifpath, R_OK) == -1)
   {
@@ -224,7 +243,11 @@ int read_grades(char *uname, int argc, char *argv[], int fileoutputflag)
       strcpy(ofname, argv[0]);
     else
       sprintf(ofname, "./%s_gradebook_log", uname);
+
+    drop_privileges();
     ofp = fopen(ofname, "w");
+    regain_privileges();
+    
     if (ofp == NULL)
     {
       printf("Error: %s\n", strerror(errno));
@@ -253,7 +276,7 @@ int read_grades(char *uname, int argc, char *argv[], int fileoutputflag)
 
 void printhelp()
 {
-  system("cat /home/registrar/help.txt");
+  system(HELPCALL);
   exit(EXIT_SUCCESS);
 }
 
@@ -292,6 +315,9 @@ int main(int argc, char *argv[])
       break;
     }
   }
+
+  ruid = getuid();
+  euid = geteuid();
 
   if (!usrflag)
     uname = get_username();
