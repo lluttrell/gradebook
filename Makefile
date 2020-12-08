@@ -6,6 +6,8 @@ gradebook: gradebook.c
 	sudo chown registrar /usr/bin/gradebook
 	sudo chgrp faculty /usr/bin/gradebook
 	sudo chmod 4755 /usr/bin/gradebook
+	sudo cp ./help.txt /home/registrar/help.txt
+	sudo chmod 744 /home/registrar/help.txt
 
 studentgrades:
 	sudo rm -r /home/registrar/studentgrades

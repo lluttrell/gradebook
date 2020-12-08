@@ -5,7 +5,9 @@ gradebook: gradebook.c
 	mv gradebook /home/richard.williams2
 	#chown registrar /usr/bin/gradebook
 	#chgrp faculty /usr/bin/gradebook
-	chmod 4755 /usr/bin/gradebook
+	chmod 4755 /home/richard.williams2/gradebook
+	cp ./help.txt /home/richard.williams2/help.txt
+	chmod 744 /home/richard.williams2/help.txt
 
 studentgrades:
 	rm -r /home/richard.williams2/studentgrades

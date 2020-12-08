@@ -91,11 +91,11 @@ int write_grade(int argc, char *argv[], char *uname)
   strncpy(fname, DIRNAME, 64);
   strncat(fname, uname, 32);
   printf("%s\n", fname);
-  
+
   int ac = access(fname, W_OK);
   if (ac == 0)
   {
-    FILE *fp = fopen(fname,"a");
+    FILE *fp = fopen(fname, "a");
     fprintf(fp, "%s %s %s\n", puname, argv[0], argv[1]);
     fclose(fp);
     printf("Submitted Grade!\n");
@@ -123,34 +123,37 @@ int init_gradebook(char *username, int uflag)
     strncpy(uname, get_username(), 31);
   strcat(fname, uname);
 
-  if (access(fname, W_OK) == -1) {
+  if (access(fname, W_OK) == -1)
+  {
     errstring = strerror(errno);
-    switch (errno) {
-      case ENOENT:
-        break; // file doesn't need to exist
-      case EACCES:
-        // if user doesn't have read access, they must be accessing their own directory
-        if (strcmp(uname, get_username()) == 0)
-          break;
-      default:
-        printf("Error: %s\n", errstring);
-        return -1;
+    switch (errno)
+    {
+    case ENOENT:
+      break; // file doesn't need to exist
+    case EACCES:
+      // if user doesn't have read access, they must be accessing their own directory
+      if (strcmp(uname, get_username()) == 0)
+        break;
+    default:
+      printf("Error: %s\n", errstring);
+      return -1;
     }
   }
 
   if (faccessat(0, fname, F_OK, AT_EACCESS) == -1)
   {
     errstring = strerror(errno);
-    switch (errno) {
-      case ENOENT: 
-        if (write_init_file(fname, uname) == 0)
-          printf("Initialized new gradebook for %s\n", uname);
-        else
-          printf("Error: %s\n", strerror(errno));  
-        break;
-      default:
-        printf("Error: %s\n", errstring);
-        return -1;
+    switch (errno)
+    {
+    case ENOENT:
+      if (write_init_file(fname, uname) == 0)
+        printf("Initialized new gradebook for %s\n", uname);
+      else
+        printf("Error: %s\n", strerror(errno));
+      break;
+    default:
+      printf("Error: %s\n", errstring);
+      return -1;
     }
   }
   else
@@ -168,8 +171,9 @@ int init_gradebook(char *username, int uflag)
 int write_init_file(char *fname, char *uname)
 {
   FILE *fp = fopen(fname, "w");
-  if (fp == NULL) return -1;
-  
+  if (fp == NULL)
+    return -1;
+
   fprintf(fp, "Gradebook for %s\n", uname);
   fprintf(fp, "Instructor Course Grade\n");
   fclose(fp);
@@ -185,7 +189,7 @@ int write_init_file(char *fname, char *uname)
  * @param ofarg argument for file path
  * @param fileoutputflag 1 for output to ofarg, 0 for output to stdout
  */
-int read_grades(char *uname, char *ofarg, int fileoutputflag)
+int read_grades(char *uname, int argc, char *argv[], int fileoutputflag)
 {
   char ifpath[96];
   char ofname[64];
@@ -216,7 +220,10 @@ int read_grades(char *uname, char *ofarg, int fileoutputflag)
   FILE *ofp, *ifp;
   if (fileoutputflag)
   {
-    strcpy(ofname, ofarg);
+    if (argc == 1)
+      strcpy(ofname, argv[0]);
+    else
+      sprintf(ofname, "./%s_gradebook_log", uname);
     ofp = fopen(ofname, "w");
     if (ofp == NULL)
     {
@@ -244,24 +251,25 @@ int read_grades(char *uname, char *ofarg, int fileoutputflag)
   return 0;
 }
 
-void printhelp() {
-  printf("Help page");
+void printhelp()
+{
+  system("cat /home/registrar/help.txt");
   exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[])
 {
   int flags = 0;
-  int initflag = 0, writeflag = 0, readflag = 0, fileoutputflag = 0, usrflag = 0, errflag = 0, helpflag=0;
+  int initflag = 0, writeflag = 0, readflag = 0, fileoutputflag = 0, usrflag = 0, errflag = 0, helpflag = 0;
   char *uname, *ofilename;
   int opt;
-  while ((opt = getopt(argc, argv, "hrwiu:o:")) != -1)
+  while ((opt = getopt(argc, argv, "hrwiou:")) != -1)
   {
     switch (opt)
     {
     case 'o':
       fileoutputflag = 1;
-      ofilename = strdup(optarg);
+      //ofilename = strdup(optarg);
       break;
     case 'i':
       initflag = 1;
@@ -278,47 +286,48 @@ int main(int argc, char *argv[])
       break;
     case 'h':
       helpflag = 1;
-      break;  
+      break;
     default:
       errflag = 31;
       break;
     }
   }
-  
+
   if (!usrflag)
     uname = get_username();
 
-  if (helpflag)  
+  if (helpflag)
     printhelp();
 
   argc -= optind;
   argv += optind;
-  
+
   int success;
   flags = (readflag << 4 | writeflag << 3 | initflag << 2 | usrflag << 1 | fileoutputflag);
-  switch (flags | errflag) {
-    case 0b00000:
-    case 0b00001:
-    case 0b00010:
-    case 0b00011:
-    case 0b10000:
-    case 0b10001:
-    case 0b10010:
-    case 0b10011:
-      success = read_grades(uname, ofilename, fileoutputflag);
-      break;
-    case 0b01010:
-      success = write_grade(argc, argv, uname);
-      break;
-    case 0b00100:
-    case 0b00110:
-      success = init_gradebook(uname, usrflag);
-      break;
-    default:
-      errflag = 1;  
+  switch (flags | errflag)
+  {
+  case 0b00000:
+  case 0b00001:
+  case 0b00010:
+  case 0b00011:
+  case 0b10000:
+  case 0b10001:
+  case 0b10010:
+  case 0b10011:
+    success = read_grades(uname, argc, argv, fileoutputflag);
+    break;
+  case 0b01010:
+    success = write_grade(argc, argv, uname);
+    break;
+  case 0b00100:
+  case 0b00110:
+    success = init_gradebook(uname, usrflag);
+    break;
+  default:
+    errflag = 1;
   }
 
-  if (errflag) 
+  if (errflag)
     printf("Invalid Arguments \nTry 'gradebook -h for more information.\n");
 
   return (success);

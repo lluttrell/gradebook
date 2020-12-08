@@ -13,7 +13,7 @@
 #define DIRNAME "/home/registrar/studentgrades/"
 #define FACGRNAME "faculty"
 
-int read_grades(char *uname, char *ofarg, int fileoutputflag);
+int read_grades(char *uname, int arcg, char *argv[], int fileoutputflag);
 int check_valid_grade(int argc, char *argv[]);
 int init_gradebook(char *username, int uflag);
 int write_init_file(char *fname, char *uname);
