@@ -106,12 +106,10 @@ int write_grade(int argc, char *argv[], char *uname)
     return -1;
   }
   const char *puname = get_username();
-  printf("%s\n", puname);
 
   char fname[96];
   strncpy(fname, DIRNAME, 64);
   strncat(fname, uname, 32);
-  printf("%s\n", fname);
 
   int ac = access(fname, W_OK);
   if (ac == 0)
@@ -250,7 +248,8 @@ int read_grades(char *uname, int argc, char *argv[], int fileoutputflag)
     
     if (ofp == NULL)
     {
-      printf("Error: %s\n", strerror(errno));
+      printf("here");
+	    printf("Error: %s\n", strerror(errno));
       return -1;
     }
   }
@@ -292,7 +291,6 @@ int main(int argc, char *argv[])
     {
     case 'o':
       fileoutputflag = 1;
-      //ofilename = strdup(optarg);
       break;
     case 'i':
       initflag = 1;

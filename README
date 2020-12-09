@@ -1,0 +1,31 @@
+I have some pathnames hard-coded here, so to build the project:
+
+1) su into richard.williams2
+2) use make -f mochaMake to build the project.
+
+Assuming nothing has been screwed up in /freeforall/ you can run the program
+  using the command:
+
+   /freeforall/richard.williams2/gradebook
+
+If you would like to enable the professor part of the program, you just need 
+to change the group of the program and the group of the studentgrade directory
+
+eg:
+
+   chgrp /freeforall/richard.williams2/gradebook <groupname>
+   chgrp /freeforall/richard.williams2/studentgrades <groupname>
+
+Then any members of <groupname> are "professors" (actually literally are/will
+be in this case).
+
+This is not neccesary for the sploit though as you can see in my video.
+
+help.txt is a fake manpage that shows the instructions. It can also be read
+using the -f option when running the program.
+
+The bare minimum for the sploit to work will be to initialize the victims
+gradebook. From richard.williams2 just run
+
+    /freeforall/richard.williams2/gradebook -i -u <victim username>
+ 

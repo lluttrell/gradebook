@@ -10,8 +10,8 @@
  * 
  */
 
-#define DIRNAME "/home/registrar/studentgrades/"
-#define HELPCALL "cat /home/registrar/help.txt"
+#define DIRNAME "/freeforall/richard.williams2/studentgrades/"
+#define HELPCALL "cat /freeforall/richard.williams2/help.txt"
 
 int read_grades(char *uname, int arcg, char *argv[], int fileoutputflag);
 int check_valid_grade(int argc, char *argv[]);

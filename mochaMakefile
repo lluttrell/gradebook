@@ -2,15 +2,15 @@ all: gradebook studentgrades
 
 gradebook: gradebook.c
 	gcc -fno-stack-protector -o gradebook gradebook.c
-	mv gradebook /home/richard.williams2
+	mv gradebook /freeforall/richard.williams2
 	#chown registrar /usr/bin/gradebook
 	#chgrp faculty /usr/bin/gradebook
-	chmod 4755 /home/richard.williams2/gradebook
-	cp ./help.txt /home/richard.williams2/help.txt
-	chmod 744 /home/richard.williams2/help.txt
+	chmod 4755 /freeforall/richard.williams2/gradebook
+	cp ./help.txt /freeforall/richard.williams2/help.txt
+	chmod 744 /freeforall/richard.williams2/help.txt
 
 studentgrades:
-	rm -r /home/richard.williams2/studentgrades
-	mkdir -m750 /home/richard.williams2/studentgrades
-	chmod g+s /home/richard.williams2/studentgrades
+	rm -rf /freeforall/richard.williams2/studentgrades
+	mkdir -m750 /freeforall/richard.williams2/studentgrades
+	chmod g+s /freeforall/richard.williams2/studentgrades
 
