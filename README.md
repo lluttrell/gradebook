@@ -1,6 +1,6 @@
-# Gradebook
+# Gradebook CTF
 
-Gradebook is my final project for a course in computer security. It is designed to look and feel like a very simple command-line tool for submitting and viewing university grades. The program is written to be exploited, not to be used for any actual purpose.
+`gradebook` is my final project for a course in computer security. It is designed to look and feel like a simple "unix-style" command-line tool for submitting and viewing university grades. The program is written to be exploited, not to be used for any actual purpose.
 
 ## Installation
 
